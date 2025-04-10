@@ -64,6 +64,7 @@
           type="text" 
           id="rhythm-input"
           placeholder="D-TtD-t-" 
+          value="D-TtD-t-" 
           class="input" 
           pattern="[dDtT\-]+" 
           title="Please 1 or more of D, d, T, t or -"
@@ -134,6 +135,8 @@
   var bpm = 150
   var currentAudio = null
 
+  
+
   const dums = ["dum1", "dum2", "dum3"].map(name => {
     const audio = new Audio(`sounds/${name}.mp3`);
     audio.volume = 1.0;
@@ -180,6 +183,10 @@
       hud.appendChild(new_div)
     }
   }
+
+  document.addEventListener("DOMContentLoaded", function() {
+    setStages(pattern, 0);
+  });
 
   inp.addEventListener("input", (event) => {
     playing = false

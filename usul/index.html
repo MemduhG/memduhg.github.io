@@ -73,11 +73,11 @@
 
       <div id="bpm-slider">
 
-        <input type="range" min="40" max="300" value="60" class="range" />
+        <input type="range" min="40" max="300" value="150" class="range" />
       </div>
 
       <div id="bpm-hint">
-        BPM: 40
+        BPM: 150
       </div>
 
       <div>
@@ -117,7 +117,7 @@
 
 <script>
   var playing = false
-  var pattern = ""
+  var pattern = "D-TtD-t-"
   var inp = document.getElementById("rhythm-input")
   var hud = document.getElementById("hud")
   var stage = 0
@@ -129,7 +129,7 @@
   var bpmSlider = document.getElementById("bpm-slider")
   var bpmHint = document.getElementById("bpm-hint")
 
-  var bpm = 40
+  var bpm = 150
   var currentAudio = null
 
   const dums = ["dum1", "dum2", "dum3"].map(name => {

@@ -66,8 +66,10 @@
           placeholder="D-TtD-t-" 
           class="input" 
           pattern="[dDtT\-]+" 
-          title="Please input only D, d, T, t or -"
+          title="Please 1 or more of D, d, T, t or -"
           maxlength="40"
+          minlength="1"
+          required
           />
       </div>
 
@@ -187,8 +189,13 @@
     inp.reportValidity()
 
     if (!inp.validity.patternMismatch) {
+      playButton.removeAttribute("disabled")
       pattern = inp.value
       setStages(pattern, 0)
+    } else {
+      stopButton.setAttribute("hidden", "")
+      playButton.removeAttribute("hidden")
+      playButton.setAttribute("disabled", "")
     }
 
     console.log(pattern)
@@ -197,7 +204,24 @@
   playButton.addEventListener("click", (event) => {
     console.log(bpm)
     console.log("running every " + (60000/bpm) + " ms")
+    playButton.setAttribute("hidden", "")
+    stopButton.removeAttribute("hidden")
+    stopButton.removeAttribute("disabled")
     intervalId = setInterval(runMetronome, 60000 / bpm)
+  }) 
+
+  stopButton.addEventListener("click", (event) => {
+    clearInterval(intervalId)
+    stage = 0
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+    }
+    console.log(bpm)
+    console.log("running every " + (60000/bpm) + " ms")
+    stopButton.setAttribute("hidden", "")
+    stopButton.setAttribute("disabled", "")
+    playButton.removeAttribute("hidden")
   }) 
 
   function runMetronome() {

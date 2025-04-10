@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8" />
+    <!-- <link rel="stylesheet" href="app.css"> -->
+    <title>MENA Music Metronome</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      * {
+        font-family: 'Verdana';
+        justify-content: center;
+      }
+
+      .section-title{
+        height:10vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+      }
+
+      .section-container{
+        height:90vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+      }
+
+      .hud {
+        font-size: xx-large;
+        display: flex;
+        flex-direction: row;
+        margin-bottom: 1.4em;
+      }
+
+      .active-step {
+        background-color: rgba(51, 170, 51, .4);
+      }
+
+      button {
+        margin-top: 0.75em;
+      }
+
+      .attribution {
+        margin-top: 10em;
+        font-size: x-small;
+      }
+
+    </style>
+  </head>
+  <body>
+    <section class="section-title">
+      <h1>MENA Metronome</h1>
+    </section>
+
+    <section class="section-container">
+      <div id="hud" class="hud">
+        
+      </div>
+      <div>
+
+          <input 
+          type="text" 
+          id="rhythm-input"
+          placeholder="D-TtD-t-" 
+          class="input" 
+          pattern="[dDtT\-]+" 
+          title="Please input only D, d, T, t or -"
+          maxlength="40"
+          />
+      </div>
+
+      <div id="bpm-slider">
+
+        <input type="range" min="40" max="300" value="60" class="range" />
+      </div>
+
+      <div id="bpm-hint">
+        BPM: 40
+      </div>
+
+      <div>
+
+        <button class="btn" id="play">
+          <svg class="size-[1.2em]" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
+          viewBox="0 0 337.173 337.173" xml:space="preserve">
+          <g>
+            <g>
+              <path style="fill:#010002;" d="M25.922,337.173V0l285.329,168.595L25.922,337.173z M42.179,28.491v280.2L279.29,168.595
+              L42.179,28.491z"/>
+            </g>
+          </g>
+        </svg>
+        
+          Play
+        </button>
+      </div>
+
+      <div>
+          <button class="btn" id="stop" hidden disabled>
+            <svg class="size-[1.2em]" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="1" y="1" width="14" height="14" fill="#000000"/>
+            </svg>            
+            Stop
+          </button>
+
+      </div>
+      <div class="attribution">
+        <p>Sounds from Darbuka pack by Schalkalwis: https://freesound.org/people/Schalkalwis/packs/2335/</p>
+        <p>License: Attribution 4.0</p> 
+      </div>
+    </section>
+
+  </body>
+</html>
+
+<script>
+  var playing = false
+  var pattern = ""
+  var inp = document.getElementById("rhythm-input")
+  var hud = document.getElementById("hud")
+  var stage = 0
+  var intervalId = 0
+
+  var playButton = document.getElementById("play")
+  var stopButton = document.getElementById("stop")
+
+  var bpmSlider = document.getElementById("bpm-slider")
+  var bpmHint = document.getElementById("bpm-hint")
+
+  var bpm = 40
+  var currentAudio = null
+
+  const dums = ["dum1", "dum2", "dum3"].map(name => {
+    const audio = new Audio(`sounds/${name}.mp3`);
+    audio.volume = 1.0;
+    return audio;
+  });
+
+  const softDums = ["dum1", "dum2", "dum3"].map(name => {
+    const audio = new Audio(`sounds/${name}.mp3`);
+    audio.volume = 0.5;
+    return audio;
+  });
+
+  const teks = ["tek1", "tek2", "tek3"].map(name => {
+    const audio = new Audio(`sounds/${name}.mp3`);
+    audio.volume = 0.8;
+    return audio;
+  });
+
+  const softTeks = ["tek1", "tek2", "tek3"].map(name => {
+    const audio = new Audio(`sounds/${name}.mp3`);
+    audio.volume = 0.4;
+    return audio;
+  });
+
+  
+  
+
+  bpmSlider.addEventListener("input", (event) => {
+    bpmHint.innerHTML = "BPM: " + event.target.value
+    bpm = event.target.value
+  })
+
+
+  function setStages(beat_string, step) {
+    hud.innerHTML = ""
+        
+    for (const [key, value] of Object.entries(beat_string)) {
+      var new_div = document.createElement("div")
+      new_div.innerHTML = value
+      new_div.classList.add("hud-step")
+      if (step == key) {
+         new_div.classList.add("active-step")
+      }
+      hud.appendChild(new_div)
+    }
+  }
+
+  inp.addEventListener("input", (event) => {
+    playing = false
+    clearInterval(intervalId)
+    inp.setCustomValidity(inp.validity.patternMismatch ? inp.title : '')
+
+    inp.reportValidity()
+
+    if (!inp.validity.patternMismatch) {
+      pattern = inp.value
+      setStages(pattern, 0)
+    }
+
+    console.log(pattern)
+  })
+
+  playButton.addEventListener("click", (event) => {
+    console.log(bpm)
+    console.log("running every " + (60000/bpm) + " ms")
+    intervalId = setInterval(runMetronome, 60000 / bpm)
+  }) 
+
+  function runMetronome() {
+    setStages(pattern, stage)
+    console.log(stage)
+    var currentStage = pattern[stage]
+    console.log(currentStage)
+    if (currentAudio && currentStage != "-") {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+    }
+
+    switch (currentStage) {
+      case "D":
+        currentAudio = dums[Math.floor(Math.random()*dums.length)]
+        currentAudio.play()
+        break
+      case "T":
+        currentAudio = dums[Math.floor(Math.random()*dums.length)]
+        currentAudio.play()
+        break
+      case "d":
+        currentAudio = softDums[Math.floor(Math.random()*dums.length)]
+        currentAudio.play()
+        break
+      case "t":
+        currentAudio = softTeks[Math.floor(Math.random()*dums.length)]
+        currentAudio.play()
+        break
+      case "-":
+        break
+    }
+
+    console.log((stage + 1) % pattern.length)
+    stage = (stage + 1) % pattern.length
+  }
+
+
+
+</script>

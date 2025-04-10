@@ -145,19 +145,19 @@
 
   const softDums = ["dum1", "dum2", "dum3"].map(name => {
     const audio = new Audio(`sounds/${name}.mp3`);
-    audio.volume = 0.5;
+    audio.volume = 0.6;
     return audio;
   });
 
   const teks = ["tek1", "tek2", "tek3"].map(name => {
     const audio = new Audio(`sounds/${name}.mp3`);
-    audio.volume = 0.8;
+    audio.volume = 1.0;
     return audio;
   });
 
   const softTeks = ["tek1", "tek2", "tek3"].map(name => {
     const audio = new Audio(`sounds/${name}.mp3`);
-    audio.volume = 0.4;
+    audio.volume = 0.6;
     return audio;
   });
 
@@ -247,7 +247,7 @@
         currentAudio.play()
         break
       case "T":
-        currentAudio = dums[Math.floor(Math.random()*dums.length)]
+        currentAudio = teks[Math.floor(Math.random()*teks.length)]
         currentAudio.play()
         break
       case "d":

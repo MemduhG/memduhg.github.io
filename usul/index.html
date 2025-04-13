@@ -54,6 +54,53 @@
       <h1>MENA Metronome</h1>
     </section>
 
+    <section style="display: none;">
+      <!-- Preload all audio files -->
+      <!-- Dum sounds (normal volume) -->
+      <audio id="dum1" preload="auto">
+        <source src="sounds/dum1.mp3" type="audio/mpeg">
+      </audio>
+      <audio id="dum2" preload="auto">
+        <source src="sounds/dum2.mp3" type="audio/mpeg">
+      </audio>
+      <audio id="dum3" preload="auto">
+        <source src="sounds/dum3.mp3" type="audio/mpeg">
+      </audio>
+      
+      <!-- Tek sounds (normal volume) -->
+      <audio id="tek1" preload="auto">
+        <source src="sounds/tek1.mp3" type="audio/mpeg">
+      </audio>
+      <audio id="tek2" preload="auto">
+        <source src="sounds/tek2.mp3" type="audio/mpeg">
+      </audio>
+      <audio id="tek3" preload="auto">
+        <source src="sounds/tek3.mp3" type="audio/mpeg">
+      </audio>
+      
+      <!-- Soft Dum sounds -->
+      <audio id="softDum1" preload="auto">
+        <source src="sounds/dum1.mp3" type="audio/mpeg">
+      </audio>
+      <audio id="softDum2" preload="auto">
+        <source src="sounds/dum2.mp3" type="audio/mpeg">
+      </audio>
+      <audio id="softDum3" preload="auto">
+        <source src="sounds/dum3.mp3" type="audio/mpeg">
+      </audio>
+      
+      <!-- Soft Tek sounds -->
+      <audio id="softTek1" preload="auto">
+        <source src="sounds/tek1.mp3" type="audio/mpeg">
+      </audio>
+      <audio id="softTek2" preload="auto">
+        <source src="sounds/tek2.mp3" type="audio/mpeg">
+      </audio>
+      <audio id="softTek3" preload="auto">
+        <source src="sounds/tek3.mp3" type="audio/mpeg">
+      </audio>
+    </section>
+
     <section class="section-container">
       <div id="hud" class="hud">
         
@@ -133,95 +180,37 @@
     var currentAudio = null
     
     // Audio collections
-    const dums = [];
-    const softDums = [];
-    const teks = [];
-    const softTeks = [];
+    const dums = [
+      document.getElementById("dum1"),
+      document.getElementById("dum2"),
+      document.getElementById("dum3")
+    ];
     
-    // Track loading progress
-    let totalSoundsToLoad = 12; // 3 sounds x 4 categories
-    let loadedSounds = 0;
-    let soundsReady = false;
+    const softDums = [
+      document.getElementById("softDum1"),
+      document.getElementById("softDum2"),
+      document.getElementById("softDum3")
+    ];
     
-    // Load audio files sequentially
-    function loadAudioFiles() {
-      // Disable play button until sounds are loaded
-      playButton.setAttribute("disabled", "");
-      playButton.innerHTML = "Loading sounds...";
-      
-      // Sound files to load
-      const soundsToLoad = [
-        { name: "dum1", category: "dum", volume: 1.0 },
-        { name: "dum2", category: "dum", volume: 1.0 },
-        { name: "dum3", category: "dum", volume: 1.0 },
-        { name: "dum1", category: "softDum", volume: 0.6 },
-        { name: "dum2", category: "softDum", volume: 0.6 },
-        { name: "dum3", category: "softDum", volume: 0.6 },
-        { name: "tek1", category: "tek", volume: 1.0 },
-        { name: "tek2", category: "tek", volume: 1.0 },
-        { name: "tek3", category: "tek", volume: 1.0 },
-        { name: "tek1", category: "softTek", volume: 0.6 },
-        { name: "tek2", category: "softTek", volume: 0.6 },
-        { name: "tek3", category: "softTek", volume: 0.6 }
-      ];
-      
-      // Load each sound sequentially
-      function loadNextSound(index) {
-        if (index >= soundsToLoad.length) {
-          // All sounds loaded
-          soundsReady = true;
-          playButton.removeAttribute("disabled");
-          playButton.innerHTML = '<svg class="size-[1.2em]" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 337.173 337.173" xml:space="preserve"><g><g><path style="fill:#010002;" d="M25.922,337.173V0l285.329,168.595L25.922,337.173z M42.179,28.491v280.2L279.29,168.595L42.179,28.491z"/></g></g></svg> Play';
-          return;
-        }
-        
-        const sound = soundsToLoad[index];
-        const audio = new Audio(`sounds/${sound.name}.mp3`);
-        
-        audio.volume = sound.volume;
-        
-        // Handle successful load
-        audio.addEventListener('canplaythrough', function onCanPlay() {
-          // Remove the event listener to prevent multiple triggers
-          audio.removeEventListener('canplaythrough', onCanPlay);
-          
-          // Add to appropriate collection
-          if (sound.category === "dum") {
-            dums.push(audio);
-          } else if (sound.category === "softDum") {
-            softDums.push(audio);
-          } else if (sound.category === "tek") {
-            teks.push(audio);
-          } else if (sound.category === "softTek") {
-            softTeks.push(audio);
-          }
-          
-          loadedSounds++;
-          playButton.innerHTML = `Loading sounds... ${Math.floor((loadedSounds/totalSoundsToLoad) * 100)}%`;
-          
-          // Load next sound
-          loadNextSound(index + 1);
-        }, { once: true });
-        
-        // Handle loading error
-        audio.addEventListener('error', function() {
-          console.error(`Failed to load sound: ${sound.name}.mp3`);
-          // Continue with next sound even if this one failed
-          loadNextSound(index + 1);
-        }, { once: true });
-        
-        // Start loading
-        audio.load();
-      }
-      
-      // Start the loading process
-      loadNextSound(0);
-    }
+    const teks = [
+      document.getElementById("tek1"),
+      document.getElementById("tek2"),
+      document.getElementById("tek3")
+    ];
     
-    // Start loading sounds when the page loads
+    const softTeks = [
+      document.getElementById("softTek1"),
+      document.getElementById("softTek2"),
+      document.getElementById("softTek3")
+    ];
+    
+    // Set volumes for soft sounds
+    softDums.forEach(audio => audio.volume = 0.6);
+    softTeks.forEach(audio => audio.volume = 0.6);
+    
+    // Initialize the application when the DOM is loaded
     document.addEventListener("DOMContentLoaded", function() {
       setStages(pattern, 0);
-      loadAudioFiles();
     });
 
     bpmSlider.addEventListener("input", (event) => {
@@ -262,10 +251,6 @@
     })
 
     playButton.addEventListener("click", (event) => {
-      if (!soundsReady) {
-        return; // Don't proceed if sounds aren't loaded
-      }
-      
       playButton.setAttribute("hidden", "")
       stopButton.removeAttribute("hidden")
       stopButton.removeAttribute("disabled")
@@ -295,18 +280,22 @@
       switch (currentStage) {
         case "D":
           currentAudio = dums[Math.floor(Math.random() * dums.length)]
+          currentAudio.currentTime = 0;
           currentAudio.play()
           break
         case "T":
           currentAudio = teks[Math.floor(Math.random() * teks.length)]
+          currentAudio.currentTime = 0;
           currentAudio.play()
           break
         case "d":
           currentAudio = softDums[Math.floor(Math.random() * softDums.length)]
+          currentAudio.currentTime = 0;
           currentAudio.play()
           break
         case "t":
           currentAudio = softTeks[Math.floor(Math.random() * softTeks.length)]
+          currentAudio.currentTime = 0;
           currentAudio.play()
           break
         case "-":

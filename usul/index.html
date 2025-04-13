@@ -208,6 +208,55 @@
     softDums.forEach(audio => audio.volume = 0.6);
     softTeks.forEach(audio => audio.volume = 0.6);
     
+    // Initialize UI on load
+    setStages(pattern, 0);
+    
+    // Mobile browser compatibility fix
+    // Most mobile browsers require user interaction before playing audio
+    let audioInitialized = false;
+    
+    function initializeAudio() {
+      if (audioInitialized) return;
+      
+      // Create a promise for each audio element to be loaded/initialized
+      const audioElements = [...dums, ...softDums, ...teks, ...softTeks];
+      const initPromises = audioElements.map(audio => {
+        return new Promise((resolve) => {
+          // Create a clone that we can use for playback
+          const clone = audio.cloneNode(true);
+          clone.volume = audio.volume;
+          
+          // Set up short silent play to initialize audio context on mobile
+          clone.volume = 0.01; // Nearly silent
+          const playPromise = clone.play();
+          
+          if (playPromise !== undefined) {
+            playPromise
+              .then(() => {
+                // Stop the silent play after a very short time
+                setTimeout(() => {
+                  clone.pause();
+                  clone.currentTime = 0;
+                  resolve();
+                }, 10);
+              })
+              .catch(error => {
+                console.warn("Audio playback was prevented by the browser:", error);
+                resolve();
+              });
+          } else {
+            resolve();
+          }
+        });
+      });
+      
+      // Wait for all audio elements to be initialized
+      Promise.all(initPromises).then(() => {
+        audioInitialized = true;
+        console.log("Audio initialized successfully");
+      });
+    }
+
     bpmSlider.addEventListener("input", (event) => {
       bpmHint.innerHTML = "BPM: " + event.target.value
       bpm = event.target.value
@@ -246,6 +295,9 @@
     })
 
     playButton.addEventListener("click", (event) => {
+      // Initialize audio on first user interaction
+      initializeAudio();
+      
       playButton.setAttribute("hidden", "")
       stopButton.removeAttribute("hidden")
       stopButton.removeAttribute("disabled")
@@ -264,34 +316,49 @@
       playButton.removeAttribute("hidden")
     }) 
 
+    function playSound(soundArray) {
+      // Use a more robust approach to play sounds on mobile
+      const index = Math.floor(Math.random() * soundArray.length);
+      const sound = soundArray[index];
+      
+      // Create a clone for each play - this prevents issues with overlapping playback
+      const soundClone = sound.cloneNode();
+      soundClone.volume = sound.volume;
+      
+      // Try to play the sound
+      const playPromise = soundClone.play();
+      
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.error("Error playing sound:", error);
+        });
+      }
+      
+      // Return the clone so we can stop it if needed
+      return soundClone;
+    }
+
     function runMetronome() {
       setStages(pattern, stage)
       var currentStage = pattern[stage]
+      
       if (currentAudio && currentStage != "-") {
         currentAudio.pause();
-        currentAudio.currentTime = 0;
+        currentAudio = null;
       }
 
       switch (currentStage) {
         case "D":
-          currentAudio = dums[Math.floor(Math.random() * dums.length)]
-          currentAudio.currentTime = 0;
-          currentAudio.play()
+          currentAudio = playSound(dums);
           break
         case "T":
-          currentAudio = teks[Math.floor(Math.random() * teks.length)]
-          currentAudio.currentTime = 0;
-          currentAudio.play()
+          currentAudio = playSound(teks);
           break
         case "d":
-          currentAudio = softDums[Math.floor(Math.random() * softDums.length)]
-          currentAudio.currentTime = 0;
-          currentAudio.play()
+          currentAudio = playSound(softDums);
           break
         case "t":
-          currentAudio = softTeks[Math.floor(Math.random() * softTeks.length)]
-          currentAudio.currentTime = 0;
-          currentAudio.play()
+          currentAudio = playSound(softTeks);
           break
         case "-":
           break

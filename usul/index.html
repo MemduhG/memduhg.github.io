@@ -56,48 +56,12 @@
 
     <section style="display: none;">
       <!-- Preload all audio files -->
-      <!-- Dum sounds (normal volume) -->
+      <!-- Main sounds -->
       <audio id="dum1" preload="auto">
         <source src="sounds/dum1.mp3" type="audio/mpeg">
       </audio>
-      <audio id="dum2" preload="auto">
-        <source src="sounds/dum2.mp3" type="audio/mpeg">
-      </audio>
-      <audio id="dum3" preload="auto">
-        <source src="sounds/dum3.mp3" type="audio/mpeg">
-      </audio>
-      
-      <!-- Tek sounds (normal volume) -->
       <audio id="tek1" preload="auto">
         <source src="sounds/tek1.mp3" type="audio/mpeg">
-      </audio>
-      <audio id="tek2" preload="auto">
-        <source src="sounds/tek2.mp3" type="audio/mpeg">
-      </audio>
-      <audio id="tek3" preload="auto">
-        <source src="sounds/tek3.mp3" type="audio/mpeg">
-      </audio>
-      
-      <!-- Soft Dum sounds -->
-      <audio id="softDum1" preload="auto">
-        <source src="sounds/dum1.mp3" type="audio/mpeg">
-      </audio>
-      <audio id="softDum2" preload="auto">
-        <source src="sounds/dum2.mp3" type="audio/mpeg">
-      </audio>
-      <audio id="softDum3" preload="auto">
-        <source src="sounds/dum3.mp3" type="audio/mpeg">
-      </audio>
-      
-      <!-- Soft Tek sounds -->
-      <audio id="softTek1" preload="auto">
-        <source src="sounds/tek1.mp3" type="audio/mpeg">
-      </audio>
-      <audio id="softTek2" preload="auto" >
-        <source src="sounds/tek2.mp3" type="audio/mpeg">
-      </audio>
-      <audio id="softTek3" preload="auto">
-        <source src="sounds/tek3.mp3" type="audio/mpeg">
       </audio>
     </section>
 
@@ -179,67 +143,22 @@
     var bpm = 150
     var currentAudio = null
     
-    // Audio collections
-    const dums = [
-      document.getElementById("dum1"),
-      document.getElementById("dum2"),
-      document.getElementById("dum3")
-    ];
+    // Single audio elements
+    const dum = document.getElementById("dum1");
+    const softDum = document.getElementById("dum1");
+    const tek = document.getElementById("tek1");
+    const softTek = document.getElementById("tek1");
     
-    const softDums = [
-      document.getElementById("softDum1"),
-      document.getElementById("softDum2"),
-      document.getElementById("softDum3")
-    ];
-    
-    const teks = [
-      document.getElementById("tek1"),
-      document.getElementById("tek2"),
-      document.getElementById("tek3")
-    ];
-    
-    const softTeks = [
-      document.getElementById("softTek1"),
-      document.getElementById("softTek2"),
-      document.getElementById("softTek3")
-    ];
-    
-    // Set volumes for soft sounds
-    softDums.forEach(audio => audio.volume = 0.6);
-    softTeks.forEach(audio => audio.volume = 0.6);
+    // Set volume for soft sounds
+    softDum.volume = 0.6;
+    softTek.volume = 0.6;
     
     // Initialize UI on load
     setStages(pattern, 0);
     
-    // Mobile browser compatibility fix
-    // Most mobile browsers require user interaction before playing audio
+    // Mobile browser compatibility flag
     let audioInitialized = false;
     
-    function initializeAudio() {
-      if (audioInitialized) return;
-      
-      // Simpler initialization - just try to play one silent sound to unlock audio
-      const unlockAudio = document.createElement('audio');
-      unlockAudio.src = 'data:audio/mp3;base64,/+MYxAAAAANIAAAAAExBTUUzLjk4LjIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
-      unlockAudio.volume = 0.001; // Nearly silent
-      
-      const playPromise = unlockAudio.play();
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
-            // Audio is unlocked
-            audioInitialized = true;
-            console.log("Audio initialized successfully");
-            setTimeout(() => {
-              unlockAudio.pause();
-            }, 10);
-          })
-          .catch(error => {
-            alert("Audio playback was prevented by the browser:", error);
-          });
-      }
-    }
-
     bpmSlider.addEventListener("input", (event) => {
       bpmHint.innerHTML = "BPM: " + event.target.value
       bpm = event.target.value
@@ -278,9 +197,6 @@
     })
 
     playButton.addEventListener("click", (event) => {
-      // Initialize audio on first user interaction
-      initializeAudio();
-      
       playButton.setAttribute("hidden", "")
       stopButton.removeAttribute("hidden")
       stopButton.removeAttribute("disabled")
@@ -299,11 +215,7 @@
       playButton.removeAttribute("hidden")
     }) 
 
-    function playSound(soundArray) {
-      // Use a more robust approach to play sounds on mobile
-      const index = Math.floor(Math.random() * soundArray.length);
-      const sound = soundArray[index];
-      
+    function playSound(sound) {
       // Reset the audio element and play it
       sound.currentTime = 0;
       
@@ -312,7 +224,8 @@
       
       if (playPromise !== undefined) {
         playPromise.catch(error => {
-          console.error("Error playing sound:", error);
+          alert("Error playing sound:");
+          alert(error);
         });
       }
       
@@ -330,16 +243,16 @@
 
       switch (currentStage) {
         case "D":
-          currentAudio = playSound(dums);
+          currentAudio = playSound(dum);
           break
         case "T":
-          currentAudio = playSound(teks);
+          currentAudio = playSound(tek);
           break
         case "d":
-          currentAudio = playSound(softDums);
+          currentAudio = playSound(softDum);
           break
         case "t":
-          currentAudio = playSound(softTeks);
+          currentAudio = playSound(softTek);
           break
         case "-":
           break

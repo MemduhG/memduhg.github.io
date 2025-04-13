@@ -93,7 +93,7 @@
       <audio id="softTek1" preload="auto">
         <source src="sounds/tek1.mp3" type="audio/mpeg">
       </audio>
-      <audio id="softTek2" preload="auto">
+      <audio id="softTek2" preload="auto" >
         <source src="sounds/tek2.mp3" type="audio/mpeg">
       </audio>
       <audio id="softTek3" preload="auto">
@@ -208,11 +208,6 @@
     softDums.forEach(audio => audio.volume = 0.6);
     softTeks.forEach(audio => audio.volume = 0.6);
     
-    // Initialize the application when the DOM is loaded
-    document.addEventListener("DOMContentLoaded", function() {
-      setStages(pattern, 0);
-    });
-
     bpmSlider.addEventListener("input", (event) => {
       bpmHint.innerHTML = "BPM: " + event.target.value
       bpm = event.target.value

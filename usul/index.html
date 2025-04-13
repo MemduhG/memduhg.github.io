@@ -218,43 +218,26 @@
     function initializeAudio() {
       if (audioInitialized) return;
       
-      // Create a promise for each audio element to be loaded/initialized
-      const audioElements = [...dums, ...softDums, ...teks, ...softTeks];
-      const initPromises = audioElements.map(audio => {
-        return new Promise((resolve) => {
-          // Create a clone that we can use for playback
-          const clone = audio.cloneNode(true);
-          clone.volume = audio.volume;
-          
-          // Set up short silent play to initialize audio context on mobile
-          clone.volume = 0.01; // Nearly silent
-          const playPromise = clone.play();
-          
-          if (playPromise !== undefined) {
-            playPromise
-              .then(() => {
-                // Stop the silent play after a very short time
-                setTimeout(() => {
-                  clone.pause();
-                  clone.currentTime = 0;
-                  resolve();
-                }, 10);
-              })
-              .catch(error => {
-                console.warn("Audio playback was prevented by the browser:", error);
-                resolve();
-              });
-          } else {
-            resolve();
-          }
-        });
-      });
+      // Simpler initialization - just try to play one silent sound to unlock audio
+      const unlockAudio = document.createElement('audio');
+      unlockAudio.src = 'data:audio/mp3;base64,/+MYxAAAAANIAAAAAExBTUUzLjk4LjIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+      unlockAudio.volume = 0.001; // Nearly silent
       
-      // Wait for all audio elements to be initialized
-      Promise.all(initPromises).then(() => {
-        audioInitialized = true;
-        console.log("Audio initialized successfully");
-      });
+      const playPromise = unlockAudio.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            // Audio is unlocked
+            audioInitialized = true;
+            console.log("Audio initialized successfully");
+            setTimeout(() => {
+              unlockAudio.pause();
+            }, 10);
+          })
+          .catch(error => {
+            alert("Audio playback was prevented by the browser:", error);
+          });
+      }
     }
 
     bpmSlider.addEventListener("input", (event) => {
@@ -321,12 +304,11 @@
       const index = Math.floor(Math.random() * soundArray.length);
       const sound = soundArray[index];
       
-      // Create a clone for each play - this prevents issues with overlapping playback
-      const soundClone = sound.cloneNode();
-      soundClone.volume = sound.volume;
+      // Reset the audio element and play it
+      sound.currentTime = 0;
       
       // Try to play the sound
-      const playPromise = soundClone.play();
+      const playPromise = sound.play();
       
       if (playPromise !== undefined) {
         playPromise.catch(error => {
@@ -334,8 +316,7 @@
         });
       }
       
-      // Return the clone so we can stop it if needed
-      return soundClone;
+      return sound;
     }
 
     function runMetronome() {

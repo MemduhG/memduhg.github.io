@@ -130,100 +130,10 @@
     var bpmHint = document.getElementById("bpm-hint")
 
     var bpm = 150
-    var currentAudio = null
     
-    // Audio collections
-    const dums = [];
-    const softDums = [];
-    const teks = [];
-    const softTeks = [];
+    // Initialize UI on load
+    setStages(pattern, 0);
     
-    // Track loading progress
-    let totalSoundsToLoad = 12; // 3 sounds x 4 categories
-    let loadedSounds = 0;
-    let soundsReady = false;
-    
-    // Load audio files sequentially
-    function loadAudioFiles() {
-      // Disable play button until sounds are loaded
-      playButton.setAttribute("disabled", "");
-      playButton.innerHTML = "Loading sounds...";
-      
-      // Sound files to load
-      const soundsToLoad = [
-        { name: "dum1", category: "dum", volume: 1.0 },
-        { name: "dum2", category: "dum", volume: 1.0 },
-        { name: "dum3", category: "dum", volume: 1.0 },
-        { name: "dum1", category: "softDum", volume: 0.6 },
-        { name: "dum2", category: "softDum", volume: 0.6 },
-        { name: "dum3", category: "softDum", volume: 0.6 },
-        { name: "tek1", category: "tek", volume: 1.0 },
-        { name: "tek2", category: "tek", volume: 1.0 },
-        { name: "tek3", category: "tek", volume: 1.0 },
-        { name: "tek1", category: "softTek", volume: 0.6 },
-        { name: "tek2", category: "softTek", volume: 0.6 },
-        { name: "tek3", category: "softTek", volume: 0.6 }
-      ];
-      
-      // Load each sound sequentially
-      function loadNextSound(index) {
-        if (index >= soundsToLoad.length) {
-          // All sounds loaded
-          soundsReady = true;
-          playButton.removeAttribute("disabled");
-          playButton.innerHTML = '<svg class="size-[1.2em]" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 337.173 337.173" xml:space="preserve"><g><g><path style="fill:#010002;" d="M25.922,337.173V0l285.329,168.595L25.922,337.173z M42.179,28.491v280.2L279.29,168.595L42.179,28.491z"/></g></g></svg> Play';
-          return;
-        }
-        
-        const sound = soundsToLoad[index];
-        const audio = new Audio(`sounds/${sound.name}.mp3`);
-        
-        audio.volume = sound.volume;
-        
-        // Handle successful load
-        audio.addEventListener('canplaythrough', function onCanPlay() {
-          // Remove the event listener to prevent multiple triggers
-          audio.removeEventListener('canplaythrough', onCanPlay);
-          
-          // Add to appropriate collection
-          if (sound.category === "dum") {
-            dums.push(audio);
-          } else if (sound.category === "softDum") {
-            softDums.push(audio);
-          } else if (sound.category === "tek") {
-            teks.push(audio);
-          } else if (sound.category === "softTek") {
-            softTeks.push(audio);
-          }
-          
-          loadedSounds++;
-          playButton.innerHTML = `Loading sounds... ${Math.floor((loadedSounds/totalSoundsToLoad) * 100)}%`;
-          
-          // Load next sound
-          loadNextSound(index + 1);
-        }, { once: true });
-        
-        // Handle loading error
-        audio.addEventListener('error', function() {
-          console.error(`Failed to load sound: ${sound.name}.mp3`);
-          // Continue with next sound even if this one failed
-          loadNextSound(index + 1);
-        }, { once: true });
-        
-        // Start loading
-        audio.load();
-      }
-      
-      // Start the loading process
-      loadNextSound(0);
-    }
-    
-    // Start loading sounds when the page loads
-    document.addEventListener("DOMContentLoaded", function() {
-      setStages(pattern, 0);
-      loadAudioFiles();
-    });
-
     bpmSlider.addEventListener("input", (event) => {
       bpmHint.innerHTML = "BPM: " + event.target.value
       bpm = event.target.value
@@ -262,59 +172,107 @@
     })
 
     playButton.addEventListener("click", (event) => {
-      if (!soundsReady) {
-        return; // Don't proceed if sounds aren't loaded
-      }
-      
       playButton.setAttribute("hidden", "")
       stopButton.removeAttribute("hidden")
       stopButton.removeAttribute("disabled")
+      playing = true
+      stage = 0
       intervalId = setInterval(runMetronome, 60000 / bpm)
     }) 
 
     stopButton.addEventListener("click", (event) => {
+      playing = false
       clearInterval(intervalId)
       stage = 0
-      if (currentAudio) {
-        currentAudio.pause();
-        currentAudio.currentTime = 0;
-      }
       stopButton.setAttribute("hidden", "")
       stopButton.setAttribute("disabled", "")
       playButton.removeAttribute("hidden")
     }) 
 
-    function runMetronome() {
-      setStages(pattern, stage)
-      var currentStage = pattern[stage]
-      if (currentAudio && currentStage != "-") {
-        currentAudio.pause();
-        currentAudio.currentTime = 0;
+    // Create audio context for better control
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    
+    // Create audio sources
+    let dumAudioBuffer = null;
+    let tekAudioBuffer = null;
+    
+    // Load audio files using fetch and audioContext
+    function loadAudio(url) {
+      return fetch(url)
+        .then(response => response.arrayBuffer())
+        .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer));
+    }
+    
+    // Load both sound files
+    Promise.all([
+      loadAudio('sounds/dum1.mp3'),
+      loadAudio('sounds/tek1.mp3')
+    ]).then(buffers => {
+      dumAudioBuffer = buffers[0];
+      tekAudioBuffer = buffers[1];
+      // Enable play button once sounds are loaded
+      playButton.removeAttribute('disabled');
+    }).catch(error => {
+      console.error('Error loading audio files:', error);
+      alert('Failed to load audio files. Please try again.');
+    });
+    
+    // Play a sound with specified volume
+    function playSound(buffer, volume) {
+      if (!buffer || !playing) return;
+      
+      try {
+        // Create a new audio source for each play
+        const source = audioContext.createBufferSource();
+        source.buffer = buffer;
+        
+        // Create a gain node to control volume
+        const gainNode = audioContext.createGain();
+        gainNode.gain.value = volume;
+        
+        // Connect the nodes
+        source.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        // Start playing
+        source.start(0);
+      } catch (error) {
+        console.error('Error playing sound:', error);
       }
+    }
+
+    function runMetronome() {
+      if (!playing) return;
+      
+      setStages(pattern, stage);
+      var currentStage = pattern[stage];
 
       switch (currentStage) {
         case "D":
-          currentAudio = dums[Math.floor(Math.random() * dums.length)]
-          currentAudio.play()
-          break
+          playSound(dumAudioBuffer, 1.0);
+          break;
         case "T":
-          currentAudio = teks[Math.floor(Math.random() * teks.length)]
-          currentAudio.play()
-          break
+          playSound(tekAudioBuffer, 1.0);
+          break;
         case "d":
-          currentAudio = softDums[Math.floor(Math.random() * softDums.length)]
-          currentAudio.play()
-          break
+          playSound(dumAudioBuffer, 0.6);
+          break;
         case "t":
-          currentAudio = softTeks[Math.floor(Math.random() * softTeks.length)]
-          currentAudio.play()
-          break
+          playSound(tekAudioBuffer, 0.6);
+          break;
         case "-":
-          break
+          break;
       }
 
-      stage = (stage + 1) % pattern.length
+      stage = (stage + 1) % pattern.length;
     }
+    
+    // Resume AudioContext on user interaction (required by browsers)
+    document.body.addEventListener('click', function() {
+      if (audioContext.state === 'suspended') {
+        audioContext.resume();
+      }
+    }, { once: true });
   </script>
 </body>
 </html>

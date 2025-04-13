@@ -54,17 +54,6 @@
       <h1>MENA Metronome</h1>
     </section>
 
-    <section style="display: none;">
-      <!-- Preload all audio files -->
-      <!-- Main sounds -->
-      <audio id="dum1" preload="auto">
-        <source src="sounds/dum1.mp3" type="audio/mpeg">
-      </audio>
-      <audio id="tek1" preload="auto">
-        <source src="sounds/tek1.mp3" type="audio/mpeg">
-      </audio>
-    </section>
-
     <section class="section-container">
       <div id="hud" class="hud">
         
@@ -141,10 +130,6 @@
     var bpmHint = document.getElementById("bpm-hint")
 
     var bpm = 150
-    
-    // Single audio elements
-    const dum = document.getElementById("dum1");
-    const tek = document.getElementById("tek1");
     
     // Initialize UI on load
     setStages(pattern, 0);
